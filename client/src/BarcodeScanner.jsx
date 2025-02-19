@@ -75,6 +75,8 @@ const BarcodeScanner = () => {
             sendToServer(result.text); 
           }
         }}
+        videoConstraints={{ facingMode: "user" }} // Use front camera
+  
       />
 
       
