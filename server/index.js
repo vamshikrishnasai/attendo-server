@@ -13,7 +13,13 @@ db();
 
 
 app.use(express.json()); 
-app.use(cors()); 
+app.use(cors(
+  {
+    origin:["https://attendo-client.vercel.app/"],
+    methods:["GET","POST"],
+    credentials:true
+  }
+)); 
 
 
 app.use("/api/users", routeData);
