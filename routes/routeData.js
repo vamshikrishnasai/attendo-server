@@ -1,6 +1,6 @@
 const express = require("express");
 const { sendDataToDb, getDataFromDb } = require("../controllers/controlData");
-const { setCache, getCache } = require("../utils/redis");
+const { setCache, getCache, healthCheck } = require("../utils/redis");
 const router = express.Router();
 
 router.post("/sendData", async (req, res) => {
@@ -8,17 +8,25 @@ router.post("/sendData", async (req, res) => {
     const { barcode, timestamp } = req.body;
     const cacheKey = `barcode:${barcode}`;
 
-    // Check cache first
-    const cachedData = await getCache(cacheKey);
-    if (cachedData) {
-      return res.json(cachedData);
+    // Try cache first, but don't fail if Redis is down
+    try {
+      const cachedData = await getCache(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
+    } catch (cacheError) {
+      console.warn("Cache read failed:", cacheError);
     }
 
-    // Your existing logic here
+    // Proceed with database operation
     const response = await sendDataToDb(req.body);
 
-    // Save to cache
-    await setCache(cacheKey, response, 3600); // Cache for 1 hour
+    // Try to cache, but don't fail if Redis is down
+    try {
+      await setCache(cacheKey, response, 3600);
+    } catch (cacheError) {
+      console.warn("Cache write failed:", cacheError);
+    }
 
     res.json(response);
   } catch (error) {
@@ -39,6 +47,12 @@ router.post("/test-redis", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Add Redis health check endpoint
+router.get("/redis-health", async (req, res) => {
+  const isHealthy = await healthCheck();
+  res.json({ status: isHealthy ? "healthy" : "unhealthy" });
 });
 
 module.exports = router;
