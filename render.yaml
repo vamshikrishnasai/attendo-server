@@ -2,8 +2,19 @@ services:
   - type: web
     name: attendo-server
     env: node
+    plan: free
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: REDIS_USERNAME
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: MONGO_URL
+        sync: false
