@@ -21,6 +21,7 @@ db();
 const corsOptions = {
   origin: [
     "https://attendo-client.vercel.app",
+    "https://attendo-servers.onrender.com",
     process.env.NODE_ENV === "development" && "http://localhost:3000",
   ].filter(Boolean),
   methods: ["GET", "POST"],
