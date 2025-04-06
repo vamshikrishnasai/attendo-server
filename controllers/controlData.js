@@ -1,10 +1,4 @@
 const userModel = require("../models/userModel");
-const Redis = require("ioredis");
-
-const redisClient = new Redis({
-  host: '127.0.0.1',
-  port: 6379,
-});
 
 exports.sendDataToDb = async (req, res) => {
   try {
@@ -29,13 +23,14 @@ exports.sendDataToDb = async (req, res) => {
       });
     }
 
-    const jsonData = { barcode, timestamp };
-    await redisClient.set('Attendo-latest', JSON.stringify(jsonData)); 
-    await redisClient.del('Attendo-cache-all'); 
-
-    console.log("Attempting to save to MongoDB:", { rollno: barcode, time: formattedTime });
-
-    const data = await userModel.create({ rollno: barcode, time: formattedTime });
+    console.log("Attempting to save to MongoDB:", {
+      rollno: barcode,
+      time: formattedTime,
+    });
+    const data = await userModel.create({
+      rollno: barcode,
+      time: formattedTime,
+    });
 
     console.log("Data successfully inserted:", data);
     return res.status(201).json({
@@ -56,26 +51,25 @@ exports.sendDataToDb = async (req, res) => {
 exports.getDataFromDb = async (req, res) => {
   try {
     console.log("Fetching all attendance records...");
-
-    const cacheData = await redisClient.get('Attendo-cache-all'); 
-    if (cacheData) {
-      console.log("Data found in Redis cache.");
-      return res.status(200).json(JSON.parse(cacheData));
-    }
-
     const data = await userModel.find({}, "rollno time -_id");
-
-    await redisClient.set('Attendo-cache-all', JSON.stringify(data), 'EX', 300); //600
 
     if (!data || data.length === 0) {
       console.log("No attendance records found.");
-      return res.status(404).json({ success: false, message: "No attendance records found", data: [] });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "No attendance records found",
+          data: [],
+        });
     }
 
     console.log(`Fetched ${data.length} records from MongoDB.`);
     return res.status(200).json(data);
   } catch (error) {
     console.error("Error retrieving attendance data:", error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

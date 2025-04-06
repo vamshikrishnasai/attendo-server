@@ -8,13 +8,5 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: REDIS_USERNAME
-        sync: false
-      - key: REDIS_PASSWORD
-        sync: false
-      - key: REDIS_HOST
-        sync: false
-      - key: REDIS_PORT
-        sync: false
       - key: MONGO_URL
         sync: false
